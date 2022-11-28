@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<link rel="apple-touch-icon" sizes="57x57" href="./apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="./apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="./apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="./apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="./apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="./apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="./android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="./ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+<meta charset="UTF-8">
+<title>2048</title>
+<style>
+  #table { border-collapse: collapse; user-select: none; }
+  #table td {
+    border: 10px solid #bbada0; width: 116px; height: 128px;
+    font-size: 50px; font-weight: bold; text-align: center;
+  }
+  #score { user-select: none; }
+  .color-2 { background-color: #eee4da; color: #776e65;}
+  .color-4 { background-color: #eee1c9; color: #776e65;}
+  .color-8 { background-color: #f3b27a; color: 'white';}
+  .color-16 { background-color: #f69664; color: 'white';}
+  .color-32 { background-color: #f77c5f; color: 'white';}
+  .color-64 { background-color: #f75f3b; color: 'white';}
+  .color-128 { background-color: #edd073; color: #776e65;}
+  .color-256 { background-color: #edcc62; color: #776e65;}
+  .color-512 { background-color: #edc950; color: #776e65;}
+  .color-1024 { background-color: #edc53f; color: #776e65;}
+  .color-2048 { background-color: #edc22e; color: #776e65;}
+</style>
+</head>
+<body>
+<table id="table"></table>
+<div>
+  <span id="score">0</span>
+  <button id="back">되돌리기</button>
+  <span id="how_many_remain">3회 남음</span>
+  <button id="Fail">포기하기</button>
+</div>
+<script>
+  const $table = document.getElementById('table');
+  const $score = document.getElementById('score');
+  const $back = document.getElementById('back');
+  const $hmr = document.getElementById('how_many_remain');
+  const $set_fail = document.getElementById('Fail')
+  let how_many = 3;
+  let how_many_temp;
+  let data = [];
+  const history = [];
+
+  function record(n, name, pw){
+    console.log('기록 시작');
+    if(window.localStorage.getItem(pw)){
+      console.log('이전의 기록 발견!');
+      const prev = window.localStorage.getItem(pw);
+      if(prev < n){
+        window.localStorage.setItem(pw,n);
+        console.log('최고기록 달성!');
+        alert(n+'점\n최고기록 달성!\n축하드립니다!!🎉🎉');
+        console.log('완료');
+      } else if(prev > n){
+        const prev_temp = prev-n;
+        alert(prev_temp+'점 차이로 아쉽게 실패!');
+        const want_record = confirm('기록을 갱신 하시겠습니까?');
+        if(want_record){
+          if(confirm('기존기록은 삭제 됩니다.\n그래도 하시겠습니까?')){
+            window.localStorage.setItem(pw,n);
+            console.log('완료')
+          } else{
+            console.log('cancled');
+          };
+          return;
+        } else{
+          return;
+        };
+      } else{
+        console.log('동점!')
+        alert(n+'점으로 동점입니다.')
+      };
+    } else {
+      console.log('첫번째 기록!');
+      window.localStorage.setItem(pw,n)
+      console.log('기록 완료!')
+    };
+  }
+
+  function login(n){
+    let restart_function = 0
+    console.log(n+'점을 기록.');
+    const name = prompt('당신의 닉네임을 작성해주세요.');
+    const pw = prompt('비밀번호를 입력해주세요');
+    if(name){
+      console.log('닉네임: ' + name);
+      let name_list = false;
+      if(window.localStorage.getItem(name)){
+        name_list = window.localStorage.getItem(name);
+        console.log(String(name_list)+String(pw));
+        if(name_list == true){
+          console.log('가입필요.');
+          pw1 == prompt('신규 가입중...\n비밀번호를 다시 한번 입력해주세요');
+          if(pw == pw1){
+            window.localStorage.setItem(name, pw);
+            console.log('완료');
+          } else{
+            console.log('비밀번호 틀림');
+            alert('비밀번호가 틀렸습니다.');
+            restart_function = 1
+            // login(n);
+          };
+        } else if(name_list == pw){
+          console.log('기록 되어있는 닉네임.');
+        } else{
+          console.log('비밀번호 틀림');
+          alert('비밀번호가 틀렸습니다.');
+          restart_function = 1
+          // login(n);
+        };
+      } /*else if(pw != pw1){
+        console.log('비밀번호 틀림');
+        alert('비밀번호가 틀렸습니다.');
+        login(n);
+      }*/ else {
+        console.log('신규');
+        const pw1 = prompt('신규 가입중...\n비밀번호를 입력해주세요');
+        if(pw == pw1){
+         window.localStorage.setItem(name, pw);
+         console.log('완료');
+         alert('가입이 완료되었습니다. 본 계정은 본 기기에 한하여 사용이 가능합니다.')
+        } else{
+          console.log('비밀번호 틀림');
+          alert('비밀번호가 틀렸습니다.');
+          restart_function = 1
+        }
+      };
+      if(restart_function == 1){
+        login(n);
+      }
+      else{
+        record(n, name, pw);
+      };
+      // return;
+    } else{
+      return;
+    }
+  }
+
+  function restore(n){
+    console.log('되돌리기 요청됨.')
+    if(how_many == 0){
+      $hmr.textContent = '되돌릴수 없습니다.'
+      $hmr.style.color = 'red'
+      console.log('되돌리기 취소됨.')
+      if (n === 1){
+        alert('되돌릴수 없습니다.');
+        console.log('Notifaction was completed with Pop Up Message.');
+        const confirm_record = confirm('점수를 기록 하시겠습니까?');
+        if(confirm_record){
+          login(`${$score.textContent}`);
+        } else{
+          return;
+        };
+      };
+      return;
+    } else{
+      console.log('승인!')
+      const prevData = history.pop();
+      if (!prevData) return; // 되돌릴 게 없으면 종료
+      how_many = how_many - 1
+      how_many.toString;
+      how_many_temp = how_many + '회 남음';
+      $score.textContent = prevData.score;
+      $hmr.textContent = how_many_temp
+      data = prevData.table;
+      draw();
+      console.log('완료!')
+    }
+  }
+
+  function set_fail(n) {
+    alert(`패배했습니다... ${$score.textContent}점`);
+    if(n == 'manual') login(`${$score.textContent}`); // 수동으로 포기 할시 바로 기록여부 확인 후 종료.
+    const yesOrNo = confirm('한턴을 되돌리시겠습니까?');
+    console.log('패배\n\n되돌리기 = ' + yesOrNo);
+    if(yesOrNo){
+      restore(n);
+    } else{
+      login(`${$score.textContent}`);
+    };
+  }
+
+  function complete(n){
+    alert('🎉🎉🎉\n축하합니다. 2048을 만들었습니다!\n🎉🎉🎉');
+    login(n);
+  }
+
+  $set_fail.addEventListener('click', () => {
+    set_fail('manual');
+  })
+
+  $back.addEventListener('click', () => {
+    restore();
+  })
+
+
+  // $table -> $fragment -> $tr -> $td
+  function startGame() {
+    const $fragment = document.createDocumentFragment();
+    [1, 2, 3, 4].forEach(function () {
+      const rowData = [];
+      data.push(rowData);
+      const $tr = document.createElement('tr');
+      [1, 2, 3, 4].forEach(() => {
+        rowData.push(0);
+        const $td = document.createElement('td');
+        $tr.appendChild($td);
+      });
+      $fragment.appendChild($tr);
+    });
+    $table.appendChild($fragment);
+    put2ToRandomCell();
+    draw();
+  }
+
+  function put2ToRandomCell() {
+    const emptyCells = []; // [[i1, j1], [i2, j2], [i3, j3]]
+    data.forEach(function (rowData, i) {
+      rowData.forEach(function (cellData, j) {
+        if (!cellData) {
+          emptyCells.push([i, j]);
+        }
+      });
+    });
+    // randomCell === [i, j]
+    const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    data[randomCell[0]][randomCell[1]] = 2;
+  }
+
+  function draw() {
+    data.forEach((rowData, i) => {
+      rowData.forEach((cellData, j) => {
+        const $target = $table.children[i].children[j];
+        if (cellData > 0) {
+          $target.textContent = cellData;
+          $target.className = 'color-' + cellData;
+        } else {
+          $target.textContent = '';
+          $target.className = '';
+        }
+      });
+    });
+  }
+
+    startGame();
+  /*
+  data = [
+     [32, 2, 4, 2],
+     [64, 4, 8, 4],
+     [2, 1024, 1024, 32],
+     [32, 16, 64, 4],
+  ];
+  draw();
+  */
+  function moveCells(direction) {
+    history.push({
+      table: JSON.parse(JSON.stringify(data)),
+      score: $score.textContent,
+    });
+    switch (direction) {
+      case 'left': {
+        const newData = [[], [], [], []];
+        data.forEach((rowData, i) => {
+          rowData.forEach((cellData, j) => {
+            if (cellData) { // newData = [2, 2, 4]
+              const currentRow = newData[i]
+              const prevData = currentRow[currentRow.length - 1];
+              if (prevData === cellData) { // 이전 값과 지금 값이 같으면
+                const score = parseInt($score.textContent);
+                $score.textContent = score + currentRow[currentRow.length - 1] * 2;
+                currentRow[currentRow.length - 1] *= -2;
+              } else {
+                newData[i].push(cellData); 
+              }
+            }
+          });
+        });
+        console.log(newData);
+        [1, 2, 3, 4].forEach((rowData, i) => {
+          [1, 2, 3, 4].forEach((cellData, j) => {
+            data[i][j] = Math.abs(newData[i][j]) || 0;
+          });
+        });
+        break;
+      }
+      case 'right': {
+        const newData = [[], [], [], []];
+        data.forEach((rowData, i) => {
+          rowData.forEach((cellData, j) => {
+            if (rowData[3 - j]) {
+              const currentRow = newData[i]
+              const prevData = currentRow[currentRow.length - 1];
+              if (prevData === rowData[3 - j]) {
+                const score = parseInt($score.textContent);
+                $score.textContent = score + currentRow[currentRow.length - 1] * 2;
+                currentRow[currentRow.length - 1] *= -2;
+              } else {
+                newData[i].push(rowData[3 - j]);
+              }
+            }
+          });
+        });
+        console.log(newData);
+        [1, 2, 3, 4].forEach((rowData, i) => {
+          [1, 2, 3, 4].forEach((cellData, j) => {
+            data[i][3 - j] = Math.abs(newData[i][j]) || 0;
+          });
+        });
+        break;
+      }
+      case 'up': {
+        const newData = [[], [], [], []];
+        data.forEach((rowData, i) => {
+          rowData.forEach((cellData, j) => {
+            if (cellData) {
+              const currentRow = newData[j]
+              const prevData = currentRow[currentRow.length - 1];
+              if (prevData === cellData) {
+                const score = parseInt($score.textContent);
+                $score.textContent = score + currentRow[currentRow.length - 1] * 2;
+                currentRow[currentRow.length - 1] *= -2;
+              } else {
+                newData[j].push(cellData);
+              }
+            }
+          });
+        });
+        console.log(newData);
+        [1, 2, 3, 4].forEach((cellData, i) => {
+          [1, 2, 3, 4].forEach((rowData, j) => {
+            data[j][i] = Math.abs(newData[i][j]) || 0;
+          });
+        });
+        break;
+      }
+      case 'down': {
+        const newData = [[], [], [], []];
+        data.forEach((rowData, i) => {
+          rowData.forEach((cellData, j) => {
+            if (data[3 - i][j]) {
+              const currentRow = newData[j];
+              const prevData = currentRow[currentRow.length - 1];
+              if (prevData === data[3 - i][j]) {
+                const score = parseInt($score.textContent);
+                $score.textContent = score + currentRow[currentRow.length - 1] * 2;
+                currentRow[currentRow.length - 1] *= -2;
+              } else {
+                newData[j].push(data[3 - i][j]);
+              }
+            }
+          });
+        });
+        console.log(newData);
+        [1, 2, 3, 4].forEach((cellData, i) => {
+          [1, 2, 3, 4].forEach((rowData, j) => {
+            data[3 - j][i] = Math.abs(newData[i][j]) || 0;
+          });
+        });
+        break;
+      }
+    }
+    if (data.flat().includes(2048)) { // 승리
+      draw();
+      setTimeout(() => {
+        complete(2048);  
+      }, 0);
+      // login($score.testContent)
+    } else if (!data.flat().includes(0)) { // 빈 칸이 없으면 패배
+      set_fail(1);
+      // alert(`패배했습니다... ${$score.textContent}점`);
+    } else {
+      put2ToRandomCell();
+      draw();
+    }
+  }
+
+  window.addEventListener('keyup', (event) => {
+    if (event.key === 'ArrowUp') {
+      moveCells('up');
+    } else if (event.key === 'ArrowDown') {
+      moveCells('down');
+    } else if (event.key === 'ArrowLeft') {
+      moveCells('left');
+    } else if (event.key === 'ArrowRight') {
+      moveCells('right');
+    }
+  });
+
+  let startCoord;
+/*
+  window.addEventListener('mousedown', (event) => {
+    startCoord = [event.clientX, event.clientY];
+  });
+  window.addEventListener('mouseup', (event) => {
+    const endCoord = [event.clientX, event.clientY];
+    const diffX = endCoord[0] - startCoord[0];
+    const diffY = endCoord[1] - startCoord[1];
+    if (diffX < 0 && Math.abs(diffX) > Math.abs(diffY)) {
+      moveCells('left');
+    } else if (diffX > 0 && Math.abs(diffX) > Math.abs(diffY)) {
+      moveCells('right');
+    } else if (diffY > 0 && Math.abs(diffX) <= Math.abs(diffY)) {
+      moveCells('down');
+    } else if (diffY < 0 && Math.abs(diffX) <= Math.abs(diffY)) {
+      moveCells('up');
+    } 
+  });
+ */
+  $table.addEventListener('touchstart', (event) => {
+    startCoord = [event.touches[0].clientX, event.touches[0].clientY];
+  });
+  $table.addEventListener('touchend', (event) => {
+    const endCoord = [event.changedTouches[0].clientX, event.changedTouches[0].clientY];
+    const diffX = endCoord[0] - startCoord[0];
+    const diffY = endCoord[1] - startCoord[1];
+    if (diffX < 0 && Math.abs(diffX) > Math.abs(diffY)) {
+      moveCells('left');
+    } else if (diffX > 0 && Math.abs(diffX) > Math.abs(diffY)) {
+      moveCells('right');
+    } else if (diffY > 0 && Math.abs(diffX) <= Math.abs(diffY)) {
+      moveCells('down');
+    } else if (diffY < 0 && Math.abs(diffX) <= Math.abs(diffY)) {
+      moveCells('up');
+    }
+  });
+</script>
+</body>
+</html>

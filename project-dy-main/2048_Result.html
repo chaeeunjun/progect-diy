@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<link rel="apple-touch-icon" sizes="57x57" href="./apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="./apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="./apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="./apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="./apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="./apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="./android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="./ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+<meta charset="UTF-8">
+<title>2048</title>
+<style>
+ body { overscroll-behavior-y: none; }
+  #table { border-collapse: collapse; user-select: none; }
+  #table td {
+    border: 10px solid #bbada0; width: 116px; height: 128px;
+    font-size: 50px; font-weight: bold; text-align: center;
+  }
+  #score { user-select: none; }
+  .color-2 { background-color: #eee4da; color: #776e65;}
+  .color-4 { background-color: #eee1c9; color: #776e65;}
+  .color-8 { background-color: #f3b27a; color: 'white';}
+  .color-16 { background-color: #f69664; color: 'white';}
+  .color-32 { background-color: #f77c5f; color: 'white';}
+  .color-64 { background-color: #f75f3b; color: 'white';}
+  .color-128 { background-color: #edd073; color: #776e65;}
+  .color-256 { background-color: #edcc62; color: #776e65;}
+  .color-512 { background-color: #edc950; color: #776e65;}
+  .color-1024 { background-color: #edc53f; color: #776e65;}
+  .color-2048 { background-color: #edc22e; color: #776e65;}
+</style>
+</head>
+<body>
+<table id="table"></table>
+<div>
+  <h1 id="info">현재 브라우저의 설정 구획에서 javascript사용을 허용하지 않고있거나 봉사기의 작동이 멈추었을수 있습네다. 따라서 현재 이 창을 정상적으로 렬수 없습니다.</h1>
+</div>
+<script>
+  const congratulation_audio = new Audio('congratulation.wav');
+  const lose_audio = new Audio('2048Lose_Mastering.wav');
+  const $info = document.getElementById('info');
+  $info.textContent = '';
+  /*
+  const url = new URL(window.location.href);
+  const urlParams = url.searchParams;
+  const score = urlParams.get('score');
+  const win = urlParams.get('win');
+  */
+  let score_with_win = undefined;
+  let win = undefined;
+  let score = undefined;
+  let game_window = undefined;
+  $info.textContent = '게임 결과를 기록하기위한 창입니다. 창을 닫을시기록이 되지 않습니다. 기록을 원하지 않을 경우 이창을 닫고, 기록을 원하실경우 이창을 열어두십시오.';
+  let test_window = undefined;
+  if (location.href == 'http://127.0.0.1:5500/2048_Result.html'){
+    test_window = window.open('http://127.0.0.1:5500/popup.html');
+  } else if (location.href == 'https://project-dy.github.io/project-dy/2048_Result.html') {
+    test_window = window.open('https://project-dy.github.io/project-dy/popup.html')
+  };
+  let test = undefined;
+  if (!test_window) {
+    $info.textContent = '팝업차단을 해제후 새로고침해주세요.'
+  } else {
+    if (location.href == 'http://127.0.0.1:5500/2048_Result.html'){
+      game_window = window.open('http://127.0.0.1:5500/2048.html');
+    } else if (location.href == 'https://project-dy.github.io/project-dy/2048_Result.html') {
+      game_window = window.open('https://project-dy.github.io/project-dy/2048.html')
+    };
+  };
+  const receiveMessage = async (e) => {
+    if(e.data.hasOwnProperty('score')){
+      console.log(e);
+      console.log(e.data.score);
+      console.log(e.data.win);
+      win = e.data.win;
+      console.log(win);
+      // startrecord(parseInt(e.data.score));
+      score = e.data.score;
+      startrecord(score);
+    };
+  };
+  window.addEventListener("message", receiveMessage, false);
+
+  function startrecord(n) {
+    if (win == 0) { // Lose
+      document.write(n+'점 으로 패배!');
+      /*try {
+        lose_audio.play();
+      } catch(e) {
+        console.log(`음악 재생 불가. ERROR 내용:${e}`);
+      };*/
+    } else if (win == 1) {
+      document.write(n+'점 으로 승리!');
+      /*try {
+        congratulation_audio.play();
+      } catch(e) {
+        console.log(`음악 재생 불가. ERROR 내용:${e}`);
+      };*/
+    };
+    login(n);
+  };
+
+  let restart_function = 0
+  function login(n){
+    console.log(n+'점을 기록.');
+    let game_window_close = 0
+    setTimeout(() => {
+      const name = prompt('당신의 닉네임을 작성해주세요.');
+      if(name == null) {
+        alert('기록이 취소되었습니다.');
+        return;
+      };
+      const pw = prompt('비밀번호를 입력해주세요');
+      if(pw == null) {
+        alert('기록이 취소되었습니다.');
+        return;
+      };
+      console.log(pw);
+      if(name){
+        console.log('닉네임: ' + name);
+        let name_list = false;
+        if(window.localStorage.getItem(name)){
+          name_list = window.localStorage.getItem(name);
+          console.log(String(name_list)+String(pw));
+          if(name_list == true){
+            console.log('가입필요.');
+            pw1 == prompt('신규 가입중...\n비밀번호를 다시 한번 입력해주세요');
+            if(pw == pw1){
+              window.localStorage.setItem(name, pw);
+              console.log('완료');
+            } else if (pw1 == window.localStorage.getItem(pw)) {
+              alert('사용 불가능한 비밀번호입니다.');
+              restart_function = 1;
+              return;
+            } else{
+              console.log('비밀번호 틀림');
+              alert('비밀번호가 틀렸습니다.');
+              restart_function = 1
+              return;
+            };
+          } else if(name_list == pw){
+            console.log('기록 되어있는 닉네임.');
+          } else{
+            console.log('비밀번호 틀림');
+            alert('비밀번호가 틀렸습니다.');
+            restart_function = 1
+            return;
+          };
+        } else {
+          console.log('신규');
+          const pw1 = prompt('신규 가입중...\n비밀번호를 입력해주세요');
+          if(pw == pw1){
+          window.localStorage.setItem(name, pw);
+          console.log('완료');
+          alert('가입이 완료되었습니다. 본 계정은 본 기기에 한하여 사용이 가능합니다.')
+          } else{
+            console.log('비밀번호 틀림');
+            alert('비밀번호가 틀렸습니다.');
+            restart_function = 1;
+          }
+        };
+        if(restart_function == 1){
+          restart_function = 0;
+          login(n);
+        }
+        else{
+          record(n, name, pw);
+        };
+        // return;
+      } else{
+        return;
+      }
+    }, 100);;
+  }
+  /*if(restart_function == 1){
+    restart_function = 0;
+    login(n);
+  };*/
+  function record(n, name, pw){
+    console.log('기록 시작');
+    if(name === null || pw === null) {
+      alert('기록이 취소되었습니다.');
+      console.log('취소!');
+      return;
+    };
+    if(!window.localStorage.getItem(pw)) {
+      console.log('첫번째 기록!');
+      window.localStorage.setItem(pw,n);
+      console.log('기록 완료!');
+    } else{
+      console.log('이전의 기록 발견!');
+      const prev = window.localStorage.getItem(pw);
+      if(prev < n){
+        window.localStorage.setItem(pw,n);
+        console.log('최고기록 달성!');
+        alert(n+'점\n최고기록 달성!\n축하드립니다!!🎉🎉');
+        console.log('완료');
+      } else if(prev > n){
+        const prev_temp = prev-n;
+        alert(prev_temp+'점 차이로 아쉽게 실패!');
+        const want_record = confirm('기록을 갱신 하시겠습니까?');
+        if(want_record){
+          if(confirm('기존기록은 삭제 됩니다.\n그래도 하시겠습니까?')){
+            window.localStorage.setItem(pw,n);
+            console.log('완료')
+          } else{
+            console.log('cancled');
+          };
+          return;
+        } else{
+          return;
+        };
+      } else{
+        console.log('동점!')
+        alert(n+'점으로 동점입니다.')
+      };
+    };
+  }
+</script>
+</body>
+</html>

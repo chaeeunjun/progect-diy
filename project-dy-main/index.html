@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cheack</title>
+</head>
+<body>
+  <h1>검사중...</h1><br>
+  <h1>cheacking browser...</h1><br>
+  <a href='./2048.html'>PC Version.</a><br>
+  <a href='./2048_mobile.html'>Mobile Version.</a><br><br>
+  <h1>10초내에 자동으로 리다이렉트 되지 않을시 위 버튼을 눌러 적절한 웹페이지로 이동해주세요.</h1><br><br>
+<script>
+  const redirect = 1;
+  const how_many_wait = 0;
+  //const how_many_wait = 5000;
+  var filter = "win16|win32|win64|mac|macintel";
+
+  if(redirect == 1){
+    document.write('<h1>현재 강제 PC버전 사용이 켜져있습니다. 따라서 자동으로 리다이렉트될시에는 무조건 PC버전 으로 이동됩니다. 모바일 유저도 사용이 가능하게 웹페이지가 리뉴얼 되었으므로 걱정하실 필요는 없습니다. 하지만 자동 리다이렉트가 안된다면 위 버튼중 \'PC Version\'을 눌러서 이동하시면 됩니다.</h1>');
+    setTimeout(function(){
+      location.replace('./2048_Result.html');
+      return;
+    }, how_many_wait);
+  } else if ( navigator.platform ) {
+    if ( filter.indexOf( navigator.platform.toLowerCase() ) < 0 ) {
+        //mobile
+        console.log('mobile 접속');
+        location.replace('./2048_mobile.html');
+    } else {
+        //pc
+        console.log('pc 접속');
+        location.replace('./2048.html');
+    };
+  };
+</script>
+</body>
+</html>
